@@ -12,7 +12,8 @@ data class Movie(
     val image: String,
     val imdb: Double,
     val kp: Double,
-    val our: Double?
+    val our: Double?,
+    val url: String
 
 
 )

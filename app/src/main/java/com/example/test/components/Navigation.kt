@@ -19,8 +19,8 @@ fun BottomNavigationMenu(
 )
 {
     val list = listOf(
-        BottomItem.Study,
-        BottomItem.Catalog,
+        BottomItem.Home,
+        BottomItem.News,
         BottomItem.Profile,
         BottomItem.Notifications
     )

@@ -1,7 +1,8 @@
 package com.example.test
-
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -19,7 +20,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,8 +35,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
@@ -41,6 +46,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.swipeable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -52,6 +58,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -86,6 +93,10 @@ import com.example.test.ui.theme.MainDark
 import com.example.test.ui.theme.Red
 import com.example.test.ui.theme.TestTheme
 import org.json.JSONObject
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalUriHandler
+import com.example.test.components.RateBar
+import com.example.test.components.Screen
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +111,13 @@ class MainActivity : ComponentActivity() {
             val topBarDisabled = remember {
                 mutableStateOf(false)
             }
+
+//            val token = LocalContext.current.getSharedPreferences("token_access", 0)
+//            Log.d("MyLog", token.getString("token_access", Context.ACCOUNT_SERVICE).toString())
+//            if(token.contains("token_access"))
+//            {
+//              context.startActivity(Intent(context, LoginActivity::class.java))
+//            }
             LaunchedEffect(nav)
             {
                 nav.currentBackStackEntryFlow.collect { backStackEntry ->
@@ -110,7 +128,7 @@ class MainActivity : ComponentActivity() {
             }
             TestTheme {
                 Scaffold(
-                    bottomBar = { BottomNavigationMenu(navController = nav)  },
+                    bottomBar = { BottomNavigationMenu(navController = nav) },
 //                    topBar = {
 //                        if (!topBarDisabled.value) {
 //                            TopAppBar(backgroundColor = MaterialTheme.colorScheme.background)
@@ -203,6 +221,7 @@ private fun getMeetings(response: String): List<Movie>{
                     item.getDouble("rating"),
                     item.getDouble("rating_kp"),
                     item.getDouble("our_rate"),
+                    item.getString("url"),
 
                     )
             )
@@ -239,31 +258,38 @@ private fun getData(page: Int, context: Context, movies: MutableState<List<Movie
 }
 
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun Index(navController: NavHostController)
 {
     val courses = remember {
         mutableStateOf(listOf<Movie>())
     }
+
+    val listState: LazyListState = rememberLazyListState()
     val i = 0;
     getData(2, LocalContext.current, courses)
+//    Button(onClick = { /*TODO*/ }, modifier = Modifier.height(20.dp)) {
+//        Text(text = "IMDIBIL")
+//    }
     LazyRow(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth(), state = listState,
+        flingBehavior = rememberSnapFlingBehavior(listState)
 
     ) {
         itemsIndexed(
             courses.value
         ) { index, item ->
 
-            MeetingCard(movie = item)
+            MeetingCard(movie = item, navController)
         }
     }
 }
 
 
 @OptIn(ExperimentalFoundationApi::class)
-@Preview(showBackground = true)
+//@Preview(showBackground = true)
 @Composable
 fun MeetingCard(
     movie: Movie = Movie(
@@ -280,15 +306,19 @@ fun MeetingCard(
         "https://imdibil.ru/image/Some Like It Hot.jpg",
         8.2,
         8.5,
-        8.1
-    ))
+        8.1,
+        "sdsdsdsds"
+
+    ), navController: NavHostController)
 {
     val rates = movie.exp_rates.chunked(2)
+    val (showDialog, setShowDialog) =  remember { mutableStateOf(false) }
     val visible = remember {
         MutableTransitionState(false).apply {
             targetState = false // start the animation immediately
         }
     }
+    val rating =  remember { mutableStateOf(0) }
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MainDark,
@@ -313,9 +343,14 @@ fun MeetingCard(
                 },
             ))
         {
+            val uriHandler = LocalUriHandler.current
 
             val alpha: Float by animateFloatAsState(if (!visible.targetState) 1f else 0.1f)
             val ctx = LocalContext.current;
+            val rated = false
+            val token = ctx.getSharedPreferences("token_access", 0)
+//            token.edit().clear().apply()
+            val login = token.getString("login", Context.ACCOUNT_SERVICE).toString()
             AsyncImage(model = movie.image, contentDescription = "poster", contentScale = ContentScale.Crop, modifier = Modifier
                 .fillMaxSize()
                 .background(MainDark), alpha = alpha)
@@ -323,7 +358,11 @@ fun MeetingCard(
                 visibleState = visible,
 
             ) {
-               Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                var rated = remember {
+                    mutableStateOf(false)
+                }
+
+                Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                    LazyColumn(
                        modifier = Modifier
                            .fillMaxWidth()
@@ -332,7 +371,6 @@ fun MeetingCard(
                        itemsIndexed(
                            rates
                        ) { index, pair ->
-
                            LazyRow (
                                Modifier
                                    .fillMaxSize()
@@ -341,6 +379,12 @@ fun MeetingCard(
                                    pair
                                ) {
                                        index, item ->
+//                                   Log.d("MyLog", item.author?.name.toString()+" "+login)
+                                   if(item.author?.name.toString() === login)
+                                   {
+                                       Log.d("MyLog", "CHANGED")
+                                       rated.value = true;
+                                   }
                                    Row (Modifier.fillMaxWidth(0.5f), verticalAlignment = Alignment.CenterVertically){
                                        AsyncImage(model = item.author?.avatar, contentDescription = movie.name,
                                            Modifier
@@ -355,9 +399,16 @@ fun MeetingCard(
                            }
                        }
                    }
-                  IconButton(onClick = { Toast.makeText(ctx, "Clicked", Toast.LENGTH_SHORT).show() }, modifier = Modifier.border(2.dp, Gold, RoundedCornerShape(50))) {
-                      Icon(Icons.Default.Add, contentDescription = "add", modifier = Modifier.size(50.dp), tint = Gold)
+                    Log.d("MyLog", rated.value.toString())
+                  if(!rated.value)
+                  {
+                      IconButton(onClick = {
+                          setShowDialog(true)
+                      }, modifier = Modifier.border(2.dp, Gold, RoundedCornerShape(50))) {
+                          Icon(Icons.Default.Add, contentDescription = "add", modifier = Modifier.size(50.dp), tint = Gold)
+                      }
                   }
+                   DialogRate(showDialog, setShowDialog, context = ctx, rating)
                }
             }
         }
@@ -384,12 +435,15 @@ fun MeetingCard(
                     Text(text = movie.imdb.toString(), color = getColor(movie.imdb))
 
                 }
+                val uriHandler = LocalUriHandler.current
+
                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(painter = painterResource(id = R.drawable.kp),
                         contentDescription = "imdb",
                         Modifier
                             .height(40.dp)
-                            .padding(horizontal = 5.dp))
+                            .padding(horizontal = 5.dp)
+                            .clickable { uriHandler.openUri(movie.url) })
                     Text(text = movie.kp.toString(), color = getColor(movie.kp))
 
                 }
@@ -421,6 +475,47 @@ fun getColor(rate: Double): Color {
         Red
     } else
     {
-        Color.White
+        Color.Gray
+    }
+}
+
+@Composable
+fun DialogRate(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: Context, rate: MutableState<Int>) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+            },
+            title = {
+                Text("Оценить")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // Change the state to close the dialog
+                        if(rate.value != 0)
+                        {
+                            Toast.makeText(context, rate.value.toString(), Toast.LENGTH_SHORT).show()
+                        }
+                        setShowDialog(false)
+                    },
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        // Change the state to close the dialog
+                        setShowDialog(false)
+                    },
+                ) {
+                    Text("Dismiss")
+                }
+            },
+            text = {
+                Screen(context, rate)
+
+            },
+        )
     }
 }

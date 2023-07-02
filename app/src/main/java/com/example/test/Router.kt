@@ -1,10 +1,12 @@
 package com.example.test
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,9 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,6 +66,7 @@ import com.example.test.components.GoldText
 import com.example.test.models.Rate
 import com.example.test.models.User
 import com.example.test.ui.theme.Gold
+import com.example.test.ui.theme.MainDark
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.UnsupportedEncodingException
@@ -71,31 +77,31 @@ import kotlin.math.log
 fun NavGraph(
     navHostController: NavHostController
 ) {
-    NavHost(navController = navHostController, startDestination = "catalog"){
+    val ctx = LocalContext.current
+    val token = LocalContext.current.getSharedPreferences("token_access", 0)
+    if(!token.contains("token_access"))
+    {
+        ctx.startActivity(Intent(ctx, LoginActivity::class.java))
+    }
+    Log.d("MyLog", navHostController.currentBackStackEntry?.destination?.route.toString())
+    NavHost(navController = navHostController, startDestination = "home"){
         composable("profile"){
             Profile(navHostController)
+
         }
-        composable("study"){
+        composable("news"){
             InDev()
         }
         composable("notifications"){
             InDev()
         }
-        composable("catalog"){
-            val token = LocalContext.current.getSharedPreferences("token_access", 0)
-            if(token.contains("token_access"))
-            {
+        composable("home"){
                 Index(navController = navHostController)
-            } else
-            {
-                navHostController.navigate("login")
-            }
+
 
         //            Index(navController = navHostController);
         }
-        composable("login"){
-            Login(navController = navHostController);
-        }
+
         composable(
             route =     "course/{id}",
             arguments = listOf(navArgument("id")
@@ -123,16 +129,18 @@ fun Profile(navController: NavHostController)
         mutableStateOf(listOf<Rate>())
     }
      getUser(3, context, user, userRates, navController);
+
+
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 5.dp)) {
+            .padding(5.dp)) {
         AsyncImage(model = user.value.avatar, contentDescription = "dsdfsdf",
             Modifier
                 .clip(
-                    RoundedCornerShape(20)
+                    RoundedCornerShape(10)
                 )
-                .fillMaxWidth()
+                .fillMaxWidth(0.5f)
         )
         GoldText(user.value.name, 22.sp, 600)
         if (user.value.avgRate !== null)
@@ -143,7 +151,20 @@ fun Profile(navController: NavHostController)
             }
         }
         Text(text = "Количество заседаний: "+user.value.amountOfMeetings)
+        Spacer(modifier = Modifier.height(10.dp))
         GoldButton("Добавить фильм", {})
+        Spacer(modifier = Modifier.height(10.dp))
+
+        LazyColumn(Modifier.fillMaxWidth()) {
+            itemsIndexed(
+                userRates.value
+            ) { index, rate ->
+                Row (horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                    Text(text = rate.movie_name!!, modifier = Modifier.fillMaxWidth(0.6f))
+                    Text(text = rate.rate.toString(), color = getColor( rate.rate.toDouble()))
+                }
+            }
+        }
 
     }
 }
@@ -194,109 +215,6 @@ fun InDev(){
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Login(navController: NavHostController) {
-//    Box(modifier = Modifier.fillMaxSize()) {
-//        ClickableText(
-//            text = AnnotatedString("Sign up here"),
-//            modifier = Modifier
-//                .align(Alignment.BottomCenter)
-//                .padding(20.dp),
-//            onClick = { },
-//            style = TextStyle(
-//                fontSize = 14.sp,
-////                fontFamily = FontFamily.Default,
-//                textDecoration = TextDecoration.Underline,
-//                color = Gold
-//            )
-//        )
-//    }
-    Column(
-        modifier = Modifier.padding(20.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        val username = remember { mutableStateOf(TextFieldValue()) }
-        val password = remember { mutableStateOf(TextFieldValue()) }
-        val incorrect = remember {
-            MutableTransitionState(false).apply {
-                targetState = false // start the animation immediately
-            }
-        }
-        val context = LocalContext.current
-        Image(painter = painterResource(id = R.drawable.logogo), contentDescription = "MainLoginLogo", Modifier.fillMaxWidth(0.7f))
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(text = "Авторизация", style = TextStyle(fontSize = 40.sp))
-        Spacer(modifier = Modifier.height(20.dp))
-        TextField(
-            label = { Text(text = "Логин") },
-            value = username.value,
-            onValueChange = { username.value = it })
-
-        Spacer(modifier = Modifier.height(20.dp))
-        TextField(
-            label = { Text(text = "Пароль") },
-            value = password.value,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            onValueChange = { password.value = it })
-
-        Spacer(modifier = Modifier.height(20.dp))
-        Box(modifier = Modifier
-            .padding(40.dp, 0.dp, 40.dp, 0.dp)
-            .width(350.dp)) {
-            GoldButton(text = "Войти", onClick = {
-                login(username, password, context, incorrect, navController)
-            })
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-        AnimatedVisibility(visibleState = incorrect) {
-            Text(text = "Неверный логин или пароль!", color = Color.Red)
-
-        }
-//        ClickableText(
-//            text = AnnotatedString("Forgot password?"),
-//            onClick = { },
-//            style = TextStyle(
-//                fontSize = 14.sp,
-////                fontFamily = FontFamily.Default
-//            )
-//        )
-    }
-}
-
-fun login(username: MutableState<TextFieldValue>, password: MutableState<TextFieldValue>, context: Context, incorrect: MutableTransitionState<Boolean>, navController: NavHostController) {
-    val jsonBody = JSONObject()
-    jsonBody.put("login", username.value.text)
-    jsonBody.put("password", password.value.text)
-    val requestBody = jsonBody.toString()
-    val url = "https://imdibil.ru/api/login.php" +
-            "?login="+username.value.text+"&password="+password.value.text
-    val queue = Volley.newRequestQueue(context)
-    val sRequest = StringRequest(
-        Request.Method.GET,
-        url,
-        {
-                response ->
-            Log.d("MyLog", response)
-            val token = context.getSharedPreferences("token_access", 0)
-            token.edit().putString("token_access",response).apply()
-            navController.navigate("profile")
-
-
-        },
-        {
-            password.value = TextFieldValue();
-            incorrect.targetState = true
-            Log.d("MyLog", "VolleyError: $it")
-        }
-    )
-    queue.add(sRequest)
-}
-
 
 fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates : MutableState<List<Rate>>, navController: NavHostController)
 {
@@ -307,9 +225,7 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
 //    {
 //        navController.navigate("login")
 //    }
-    Log.d("MyLog", tok)
     val url = "https://imdibil.ru/api/profile.php?token=" + tok
-    Log.d("MyLog", url)
     val queue = Volley.newRequestQueue(context)
     val sRequest = StringRequest(
         Request.Method.GET,
@@ -321,12 +237,13 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
             val ratesObj = mainObject.getJSONArray("rates")
             mutableState.value = User(1, mainObject.getString("name"), "https://imdibil.ru/uploads/"+mainObject.getString("avatar"), mainObject.getDouble("module"), mainObject.getInt("amount"))
             val rateArray = arrayListOf<Rate>()
-            for (i in 0 .. ratesObj.length())
+            for (i in 0 until  ratesObj.length()-1)
             {
                 val item = ratesObj[i] as JSONObject
                 rateArray.add(Rate(item.getInt("rate"), null, item.getString("name_m")
                 ))
             }
+            rates.value = rateArray
         },
         {
             Log.d("MyLog", "VolleyError: $it")
