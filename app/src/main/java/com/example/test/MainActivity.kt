@@ -177,7 +177,6 @@ private fun getMeetings(response: String): List<Movie>{
 
     for (i in 0 until mainObject.length()){ //mainObject.length()
         val item = mainObject[i] as JSONObject
-
         try {
 
             val exps = arrayListOf<Rate>();
@@ -201,6 +200,8 @@ private fun getMeetings(response: String): List<Movie>{
                     Log.d("MyLog", e.toString())
                 }
             }
+            val poss = item.getJSONObject("positions")
+
 
 
 
@@ -222,6 +223,7 @@ private fun getMeetings(response: String): List<Movie>{
                     item.getDouble("rating_kp"),
                     item.getDouble("our_rate"),
                     item.getString("url"),
+                    listOf(poss.getInt("imdb"),poss.getInt("kp"),poss.getInt("imdibil"))
 
                     )
             )
@@ -408,7 +410,7 @@ fun MeetingCard(
                           Icon(Icons.Default.Add, contentDescription = "add", modifier = Modifier.size(50.dp), tint = Gold)
                       }
                   }
-                   DialogRate(showDialog, setShowDialog, context = ctx, rating)
+                   DialogRate(showDialog, setShowDialog, context = ctx, rating, movie = movie.id)
                }
             }
         }
@@ -417,7 +419,13 @@ fun MeetingCard(
         Column(modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Text(text = movie.name, color = Gold, fontSize = 22.sp, fontWeight = FontWeight(600))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween)
+            {
+                Text(text = movie.name, color = Gold, fontSize = 22.sp, fontWeight = FontWeight(600) , modifier = Modifier.fillMaxWidth(0.7f), maxLines = 1)
+                Text(text = "#"+movie.id.toString(), fontSize = 22.sp, color = Color.Gray)
+
+
+            }
             Text(text = "Год: "+movie.year, fontSize = 18.sp)
             Text(text = "Режиссер: "+movie.director, fontSize = 18.sp)
             Text(text = "Длительность: "+movie.duration, fontSize = 18.sp)
@@ -433,7 +441,10 @@ fun MeetingCard(
                             .padding(horizontal = 5.dp)
                         )
                     Text(text = movie.imdb.toString(), color = getColor(movie.imdb))
-
+                    if(movie.positions !== null)
+                    {
+                        Text(text = movie.positions[0].toString(), color = Color.Gray)
+                    }
                 }
                 val uriHandler = LocalUriHandler.current
 
@@ -445,6 +456,10 @@ fun MeetingCard(
                             .padding(horizontal = 5.dp)
                             .clickable { uriHandler.openUri(movie.url) })
                     Text(text = movie.kp.toString(), color = getColor(movie.kp))
+                    if(movie.positions !== null)
+                    {
+                        Text(text = movie.positions[1].toString(), color = Color.Gray)
+                    }
 
                 }
                 if(movie.our !== null)
@@ -457,7 +472,10 @@ fun MeetingCard(
                                 .height(40.dp)
                                 .padding(horizontal = 5.dp))
                         Text(text = movie.our.toString(), color = getColor(movie.our))
-
+                        if(movie.positions !== null)
+                        {
+                            Text(text = movie.positions[2].toString(), color = Color.Gray)
+                        }
                     }
                 }
             }
@@ -480,7 +498,7 @@ fun getColor(rate: Double): Color {
 }
 
 @Composable
-fun DialogRate(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: Context, rate: MutableState<Int>) {
+fun DialogRate(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: Context, rate: MutableState<Int>, movie: Int) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -494,12 +512,12 @@ fun DialogRate(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: C
                         // Change the state to close the dialog
                         if(rate.value != 0)
                         {
-                            Toast.makeText(context, rate.value.toString(), Toast.LENGTH_SHORT).show()
+                            addRate(rate, getToken(context = context), context = context, movie = movie)
                         }
                         setShowDialog(false)
                     },
                 ) {
-                    Text("Confirm")
+                    Text("Подтвердить")
                 }
             },
             dismissButton = {
@@ -509,7 +527,7 @@ fun DialogRate(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: C
                         setShowDialog(false)
                     },
                 ) {
-                    Text("Dismiss")
+                    Text("Закрыть")
                 }
             },
             text = {
@@ -518,4 +536,37 @@ fun DialogRate(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: C
             },
         )
     }
+}
+
+private fun addRate(rating: MutableState<Int>, token: String, context: Context, movie: Int)
+{
+
+    val url = "https://imdibil.ru/api/rate.php?" +
+            "token="+token + "&rating=" + rating.value + "&movie=" + movie
+    val queue = Volley.newRequestQueue(context)
+    val sRequest = StringRequest(
+        Request.Method.GET,
+        url,
+        {
+                response ->
+
+            val json = JSONObject(response)
+            Toast.makeText(context, json.getString("text"), Toast.LENGTH_SHORT).show()
+        },
+        {
+            Log.d("MyLog", "VolleyError: $it")
+        }
+    )
+    queue.add(sRequest)
+}
+
+
+fun getToken(context: Context): String
+{
+    val token = context.getSharedPreferences("token_access", 0)
+    if(!token.contains("token_access"))
+    {
+        context.startActivity(Intent(context, LoginActivity::class.java))
+    }
+    return token.getString("token_access", Context.ACCOUNT_SERVICE).toString()
 }

@@ -13,7 +13,8 @@ data class Movie(
     val imdb: Double,
     val kp: Double,
     val our: Double?,
-    val url: String
+    val url: String,
+    val positions: List<Int>? = null
 
 
 )

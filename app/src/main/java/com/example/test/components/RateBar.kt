@@ -80,7 +80,6 @@ fun RateBar(context: Context = LocalContext.current, rate: MutableState<Int>)
 }
 
 
-@Preview
 @Composable
 fun test()
 {
