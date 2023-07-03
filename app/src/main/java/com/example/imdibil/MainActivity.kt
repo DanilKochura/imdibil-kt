@@ -23,6 +23,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
@@ -97,12 +99,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalUriHandler
 import com.example.test.components.RateBar
 import com.example.test.components.Screen
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 
 class MainActivity : ComponentActivity() {
+    private lateinit var analytics: FirebaseAnalytics
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            analytics = Firebase.analytics
             val nav = rememberNavController()
             val context = LocalContext.current
             val title = remember {
@@ -274,17 +282,90 @@ fun Index(navController: NavHostController)
 //    Button(onClick = { /*TODO*/ }, modifier = Modifier.height(20.dp)) {
 //        Text(text = "IMDIBIL")
 //    }
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth(), state = listState,
-        flingBehavior = rememberSnapFlingBehavior(listState)
 
-    ) {
-        itemsIndexed(
-            courses.value
-        ) { index, item ->
+    val sort = remember {
+        mutableStateOf(0)
+    }
+    Column(Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .padding(start = 5.dp, top = 5.dp)
+                .horizontalScroll(rememberScrollState()),
+        ) {
+            Button(onClick = {
+                         if(sort.value == 0)
+                         {
+                             sort.value = 1
+                             courses.value = courses.value.sortedByDescending { it.positions?.get(0)}
+                         }
+                         else if(sort.value == 1){
+                             sort.value = 2
+                             courses.value = courses.value.sortedBy { it.positions?.get(0)}
+                         } else
+                         {
+                             sort.value = 0
+                             courses.value = courses.value.sortedByDescending { it.id}
+                         }
 
-            MeetingCard(movie = item, navController)
+            },  modifier = Modifier
+                .height(35.dp)
+                .padding(horizontal = 5.dp)) {
+                Text(text = "IMDB")
+            }
+            Button(onClick = {
+                if(sort.value == 0)
+                {
+                    sort.value = 1
+                    courses.value = courses.value.sortedByDescending { it.positions?.get(2)}
+                }
+                else if(sort.value == 1){
+                    sort.value = 2
+                    courses.value = courses.value.sortedBy { it.positions?.get(2)}
+                } else
+                {
+                    sort.value = 0
+                    courses.value = courses.value.sortedByDescending { it.id}
+                }
+            },  modifier = Modifier
+                .height(35.dp)
+                .padding(horizontal = 5.dp)) {
+                Text(text = "IMDBil")
+            }
+            Button(onClick = {  if(sort.value == 0)
+            {
+                sort.value = 1
+                courses.value = courses.value.sortedByDescending { it.positions?.get(1) }
+            }
+            else if(sort.value == 1){
+                sort.value = 2
+                courses.value = courses.value.sortedBy { it.positions?.get(1)}
+            } else
+            {
+                sort.value = 0
+                courses.value = courses.value.sortedByDescending { it.id}
+            } },  modifier = Modifier
+                .height(35.dp)
+                .padding(horizontal = 5.dp)) {
+                Text(text = "КиноПоиск")
+            }
+            Button(onClick = { /*TODO*/ },  modifier = Modifier
+                .height(35.dp)
+                .padding(horizontal = 5.dp)) {
+                Text(text = "По номеру")
+            }
+        }
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth(), state = listState,
+            flingBehavior = rememberSnapFlingBehavior(listState)
+
+        ) {
+            itemsIndexed(
+                courses.value
+            ) { index, item ->
+
+                MeetingCard(movie = item, navController)
+            }
         }
     }
 }
@@ -336,11 +417,12 @@ fun MeetingCard(
 
 
         Surface( modifier = Modifier
-            .height(500.dp)
+            .height(480.dp)
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { },
                 onLongClick = {
+
                     visible.targetState = !visible.targetState
                 },
             ))
@@ -418,7 +500,7 @@ fun MeetingCard(
 //        Image(painter = painterResource(id = R.drawable.jazz), contentDescription = movie.name, modifier = Modifier.height(500.dp).fillMaxWidth())
         Column(modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            .padding(horizontal = 15.dp, vertical = 10.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween)
             {
                 Text(text = movie.name, color = Gold, fontSize = 22.sp, fontWeight = FontWeight(600) , modifier = Modifier.fillMaxWidth(0.7f), maxLines = 1)
@@ -427,7 +509,7 @@ fun MeetingCard(
 
             }
             Text(text = "Год: "+movie.year, fontSize = 18.sp)
-            Text(text = "Режиссер: "+movie.director, fontSize = 18.sp)
+            Text(text = "Режиссер: "+movie.director, fontSize = 18.sp, maxLines = 1)
             Text(text = "Длительность: "+movie.duration, fontSize = 18.sp)
             Row(modifier = Modifier
                 .fillMaxWidth()
