@@ -1,4 +1,4 @@
-package com.example.test
+package com.example.imdibil
 
 import android.content.Context
 import android.content.Intent
@@ -44,8 +44,8 @@ import androidx.navigation.NavHostController
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.test.components.GoldButton
-import com.example.test.ui.theme.TestTheme
+import com.example.imdibil.components.GoldButton
+import com.example.imdibil.ui.theme.TestTheme
 import org.json.JSONObject
 
 class LoginActivity : ComponentActivity() {

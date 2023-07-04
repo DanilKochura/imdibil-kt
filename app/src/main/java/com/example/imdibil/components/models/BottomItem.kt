@@ -1,6 +1,6 @@
-package com.example.test.components.models
+package com.example.imdibil.components.models
 
-import com.example.test.R
+import com.example.imdibil.R
 
 sealed class BottomItem(val title: String, val icon: Int, val route: String)
 {

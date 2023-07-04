@@ -1,4 +1,4 @@
-package com.example.test.components
+package com.example.imdibil.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.test.ui.theme.Gold
+import com.example.imdibil.ui.theme.Gold
 
 @Preview
 @Composable

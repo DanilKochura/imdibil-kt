@@ -1,4 +1,4 @@
-package com.example.test.models
+package com.example.imdibil.models
 
 data class Movie(
     val id: Int,
@@ -14,7 +14,9 @@ data class Movie(
     val kp: Double,
     val our: Double?,
     val url: String,
-    val positions: List<Int>? = null
+    val positions: List<Int>? = null,
+    val id_e: Int? = null,
+    val descr: String? = null
 
 
 )

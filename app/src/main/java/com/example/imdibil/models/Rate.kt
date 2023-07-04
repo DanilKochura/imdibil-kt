@@ -1,4 +1,4 @@
-package com.example.test.models
+package com.example.imdibil.models
 
 data class Rate(
     val rate: Int,

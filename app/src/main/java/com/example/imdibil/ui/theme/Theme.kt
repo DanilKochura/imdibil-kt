@@ -1,4 +1,4 @@
-package com.example.test.ui.theme
+package com.example.imdibil.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -17,14 +17,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = MainDark,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Color.White,
+    secondary = MainDark,
+    tertiary = Color.Gray
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = MainDark,
-    secondary = MainDark,
+    secondary = Color.White,
     tertiary = Color.Gray
 
     /* Other default colors to override

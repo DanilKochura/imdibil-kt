@@ -1,27 +1,22 @@
-package com.example.test
+package com.example.imdibil
 
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,16 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -53,24 +42,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
-import com.android.volley.AuthFailureError
-import com.android.volley.NetworkResponse
 import com.android.volley.Request
-import com.android.volley.VolleyError
-import com.android.volley.VolleyLog
-import com.android.volley.toolbox.HttpHeaderParser
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.test.components.GoldButton
-import com.example.test.components.GoldText
-import com.example.test.models.Rate
-import com.example.test.models.User
-import com.example.test.ui.theme.Gold
-import com.example.test.ui.theme.MainDark
-import org.json.JSONException
+import com.example.imdibil.components.GoldButton
+import com.example.imdibil.components.GoldText
+import com.example.imdibil.components.Screen
+import com.example.imdibil.models.Movie
+import com.example.imdibil.models.Rate
+import com.example.imdibil.models.User
 import org.json.JSONObject
-import java.io.UnsupportedEncodingException
-import kotlin.math.log
 
 
 @Composable
@@ -83,14 +64,14 @@ fun NavGraph(
     {
         ctx.startActivity(Intent(ctx, LoginActivity::class.java))
     }
-    Log.d("MyLog", navHostController.currentBackStackEntry?.destination?.route.toString())
+    val t = getToken(ctx)
     NavHost(navController = navHostController, startDestination = "home"){
         composable("profile"){
             Profile(navHostController)
 
         }
         composable("news"){
-            InDev()
+            Thirds(navHostController, ctx)
         }
         composable("notifications"){
             InDev()
@@ -118,41 +99,60 @@ fun NavGraph(
     }
 }
 
+
+
 @Composable
 fun Profile(navController: NavHostController)
 {
+    val movies = remember {
+        mutableStateOf(arrayListOf<Movie>())
+    }
     val context = LocalContext.current
     val user = remember {
-        mutableStateOf(User(0, "", ""))
+        mutableStateOf(User(0, "", "", 0.0, 0))
+    }
+    val amount = remember {
+        mutableStateOf(0)
     }
     val userRates = remember {
         mutableStateOf(listOf<Rate>())
     }
-     getUser(3, context, user, userRates, navController);
-
-
+    val (showDialog, setShowDialog) =  remember { mutableStateOf(false) }
+     getUser(3, context, user, userRates, navController, amount);
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(5.dp)) {
-        AsyncImage(model = user.value.avatar, contentDescription = "dsdfsdf",
+            .padding(10.dp)) {
+        Row (
             Modifier
-                .clip(
-                    RoundedCornerShape(10)
-                )
-                .fillMaxWidth(0.5f)
-        )
-        GoldText(user.value.name, 22.sp, 600)
-        if (user.value.avgRate !== null)
-        {
-            Row {
-                Text(text = "Средняя оценка: ")
-                Text(text = user.value.avgRate!!.toString(), color = getColor(user.value.avgRate!!) )
+                .fillMaxWidth()
+                .fillMaxHeight(0.2f)){
+            AsyncImage(model = user.value.avatar, contentDescription = "dsdfsdf",
+                Modifier
+                    .clip(
+                        RoundedCornerShape(10)
+                    )
+                    .fillMaxWidth(0.5f)
+            )
+            Column (verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
+                Text(text = user.value.avgRate!!.toString(), color = getColor(user.value.avgRate!!) , fontSize = 25.sp, fontWeight = FontWeight(600))
+                Text(text = user.value.amountOfMeetings.toString()+"/"+amount.value.toString(), fontSize = 25.sp)
             }
         }
-        Text(text = "Количество заседаний: "+user.value.amountOfMeetings)
+
+        Row(Modifier.fillMaxWidth(), Arrangement.Center) {
+            GoldText(user.value.name, 28.sp, 600)
+        }
+        if (user.value.avgRate !== null)
+        {
+            Row (horizontalArrangement = Arrangement.SpaceEvenly){
+//                Text(text = "Средняя оценка: ")
+
+            }
+        }
         Spacer(modifier = Modifier.height(10.dp))
-        GoldButton("Добавить фильм", {})
+        GoldButton("Добавить фильм", {setShowDialog(true)})
+        DialogAddMovie(showDialog, setShowDialog, context = context, movies)
         Spacer(modifier = Modifier.height(10.dp))
 
         LazyColumn(Modifier.fillMaxWidth()) {
@@ -186,13 +186,6 @@ fun Notifications()
 }
 
 
-@Composable
-fun Study(){
-    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "InDev: Study")
-
-    }
-}
 
 @Composable
 fun InDev(){
@@ -216,7 +209,7 @@ fun InDev(){
 
 
 
-fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates : MutableState<List<Rate>>, navController: NavHostController)
+fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates : MutableState<List<Rate>>, navController: NavHostController, amount: MutableState<Int>)
 {
     val token = context.getSharedPreferences("token_access", 0)
 
@@ -232,18 +225,25 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
         url,
         {
                 response ->
+            try {
+                val mainObject = JSONObject(response).getJSONObject("data")
+//            Log.d("MyLog", mainObject.getDouble("module").toString())
+                val ratesObj = mainObject.getJSONArray("rates")
 
-            val mainObject = JSONObject(response).getJSONObject("data")
-            val ratesObj = mainObject.getJSONArray("rates")
-            mutableState.value = User(1, mainObject.getString("name"), "https://imdibil.ru/uploads/"+mainObject.getString("avatar"), mainObject.getDouble("module"), mainObject.getInt("amount"))
-            val rateArray = arrayListOf<Rate>()
-            for (i in 0 until  ratesObj.length()-1)
+                mutableState.value = User(1, mainObject.getString("name"), "https://imdibil.ru/uploads/"+mainObject.getString("avatar"), mainObject.getDouble("module"), mainObject.getInt("amount"))
+                val rateArray = arrayListOf<Rate>()
+                amount.value = JSONObject(response).getInt("count")
+                for (i in 0 until  ratesObj.length()-1)
+                {
+                    val item = ratesObj[i] as JSONObject
+                    rateArray.add(Rate(item.getInt("rate"), null, item.getString("name_m")
+                    ))
+                }
+                rates.value = rateArray
+            } catch (e: Exception)
             {
-                val item = ratesObj[i] as JSONObject
-                rateArray.add(Rate(item.getInt("rate"), null, item.getString("name_m")
-                ))
+                Log.d("MyLog", e.toString())
             }
-            rates.value = rateArray
         },
         {
             Log.d("MyLog", "VolleyError: $it")
@@ -254,3 +254,79 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
 
 
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: Context, movies: MutableState<ArrayList<Movie>>) {
+    val username = remember { mutableStateOf(TextFieldValue()) }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+            },
+            title = {
+                Text("Оценить")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        findOrGetMovie(getToken(context), context,username.value.text, movies)
+                        // Change the state to close the dialog
+
+//                        setShowDialog(false)
+                    },
+                ) {
+                    Text("Подтвердить")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        // Change the state to close the dialog
+                        setShowDialog(false)
+                    },
+                ) {
+                    Text("Закрыть")
+                }
+            },
+            text = {
+                Column {
+                    TextField(value = username.value,
+                        onValueChange = { username.value = it })
+                    LazyRow {
+                        itemsIndexed(movies.value)
+                        {
+                            it, item ->
+                            AsyncImage(model = item.image, contentDescription = item.name)
+                            Text(text = item.name)
+                        }
+                    }
+                }
+            },
+        )
+    }
+}
+//
+private fun findOrGetMovie(token: String, context: Context, kp: String, movies: MutableState<ArrayList<Movie>>)
+{
+
+    val url = "https://imdibil.ru/api/getMovie.php?" +
+            "token="+token + "&mov=" + kp
+    val queue = Volley.newRequestQueue(context)
+    val sRequest = StringRequest(
+        Request.Method.GET,
+        url,
+        {
+                response ->
+            Log.d("MyLog", response)
+            Toast.makeText(context, response, Toast.LENGTH_SHORT).show()
+
+            val json = JSONObject(response)
+            movies.value = arrayListOf(Movie(0,json.getString("name"), "",0,0,"","", listOf(), json.getString("poster"), 0.0, 0.0,0.0, ""))
+        },
+        {
+            Log.d("MyLog", "VolleyError: $it")
+
+        }
+    )
+    queue.add(sRequest)
+}

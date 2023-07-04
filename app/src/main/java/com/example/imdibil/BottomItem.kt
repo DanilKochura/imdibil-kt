@@ -1,4 +1,4 @@
-package com.example.test
+package com.example.imdibil
 
 
 sealed class BottomItem(val title: String, val icon: Int, val route: String)

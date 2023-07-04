@@ -1,4 +1,4 @@
-package com.example.test
+package com.example.imdibil
 
 import org.junit.Test
 
