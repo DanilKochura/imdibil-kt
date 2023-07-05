@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -47,7 +46,6 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.imdibil.components.GoldButton
 import com.example.imdibil.components.GoldText
-import com.example.imdibil.components.Screen
 import com.example.imdibil.models.Movie
 import com.example.imdibil.models.Rate
 import com.example.imdibil.models.User
@@ -195,6 +193,7 @@ fun InDev(){
         Log.d("MyLog", token.getString("token", "kt").toString())
     } else
     {
+
         token.edit().putString("token","token").apply()
     }
     Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
@@ -258,7 +257,10 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: Context, movies: MutableState<ArrayList<Movie>>) {
-    val username = remember { mutableStateOf(TextFieldValue()) }
+    val username = remember { mutableStateOf(arrayListOf(TextFieldValue(), TextFieldValue(),TextFieldValue())) }
+    val movs = remember {
+        mutableStateOf(listOf("", "",""))
+    }
     if (showDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -269,7 +271,8 @@ fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, contex
             confirmButton = {
                 Button(
                     onClick = {
-                        findOrGetMovie(getToken(context), context,username.value.text, movies)
+                        val texts = listOf(username.value[0].text,username.value[1].text,username.value[2].text)
+                              postMoviesDataUsingVolley(texts, context)
                         // Change the state to close the dialog
 
 //                        setShowDialog(false)
@@ -290,27 +293,36 @@ fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, contex
             },
             text = {
                 Column {
-                    TextField(value = username.value,
-                        onValueChange = { username.value = it })
-                    LazyRow {
-                        itemsIndexed(movies.value)
-                        {
-                            it, item ->
-                            AsyncImage(model = item.image, contentDescription = item.name)
-                            Text(text = item.name)
-                        }
-                    }
+                    TextField(value = username.value[0],
+                        onValueChange = { username.value[0] = it }, maxLines = 1)
+                    TextField(value = username.value[1],
+                        onValueChange = { username.value[1] = it }, maxLines = 1)
+                    TextField(value = username.value[2],
+                        onValueChange = { username.value[2] = it }, maxLines = 1)
+//                    LazyRow(Modifier.fillMaxWidth()) {
+//                        itemsIndexed(movs.value)
+//                        {
+//                            ite, item ->
+//                            AsyncImage(model = item, contentDescription = "", modifier = Modifier.width(90.dp))
+//                        }
+//                    }
                 }
+
             },
         )
     }
 }
 //
-private fun findOrGetMovie(token: String, context: Context, kp: String, movies: MutableState<ArrayList<Movie>>)
+private fun findOrGetMovie(
+    token: String,
+    context: Context,
+    kp: ArrayList<TextFieldValue>,
+    movies: MutableState<ArrayList<Movie>>,
+)
 {
 
     val url = "https://imdibil.ru/api/getMovie.php?" +
-            "token="+token + "&mov=" + kp
+            "token="+token + "&mov1=" + kp[0].text
     val queue = Volley.newRequestQueue(context)
     val sRequest = StringRequest(
         Request.Method.GET,
@@ -330,3 +342,4 @@ private fun findOrGetMovie(token: String, context: Context, kp: String, movies: 
     )
     queue.add(sRequest)
 }
+

@@ -135,7 +135,12 @@ private fun getThirds(response: String): List<Third>{
         val item = third[0] as JSONObject
 
         val author = item.getString("name")
-        val selected = item.getInt("selected")
+        val selected = if (item.has("selected") && !item.isNull("selected")) {
+            item.getInt("selected")
+        } else
+        {
+            0
+        }
 
         list.add(Third(thirdList, author = author, selected = selected))
 

@@ -378,7 +378,7 @@ fun MeetingCard(
                 }
 
                 Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    if(selected == null)
+                    if(selected == null && !movie.descr.isNullOrBlank())
                     {
                         LazyColumn(
                             modifier = Modifier
