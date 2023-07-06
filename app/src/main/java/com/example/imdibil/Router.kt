@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -149,7 +151,7 @@ fun Profile(navController: NavHostController)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
-        GoldButton("Добавить фильм", {setShowDialog(true)})
+        GoldButton("Добавить тройку", {setShowDialog(true)})
         DialogAddMovie(showDialog, setShowDialog, context = context, movies)
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -162,6 +164,14 @@ fun Profile(navController: NavHostController)
                     Text(text = rate.rate.toString(), color = getColor( rate.rate.toDouble()))
                 }
             }
+        }
+        Button(onClick = {
+            val token = context.getSharedPreferences("token_access", 0)
+            token.edit().clear().apply()
+            context.startActivity(Intent(context, LoginActivity::class.java))
+        }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+            Text(text = "Выход")
+
         }
 
     }
@@ -272,7 +282,7 @@ fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, contex
                 Button(
                     onClick = {
                         val texts = listOf(username.value[0].text,username.value[1].text,username.value[2].text)
-                              postMoviesDataUsingVolley(texts, context)
+                        postMoviesDataUsingVolley(texts, context)
                         // Change the state to close the dialog
 
 //                        setShowDialog(false)
@@ -294,11 +304,11 @@ fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, contex
             text = {
                 Column {
                     TextField(value = username.value[0],
-                        onValueChange = { username.value[0] = it }, maxLines = 1)
+                        onValueChange = { username.value[0] = it }, maxLines = 1, label = { Text(text = "Ссылка на КП 1") },)
                     TextField(value = username.value[1],
-                        onValueChange = { username.value[1] = it }, maxLines = 1)
+                        onValueChange = { username.value[1] = it }, maxLines = 1, label = { Text(text = "Ссылка на КП 2") },)
                     TextField(value = username.value[2],
-                        onValueChange = { username.value[2] = it }, maxLines = 1)
+                        onValueChange = { username.value[2] = it }, maxLines = 1, label = { Text(text = "Ссылка на КП 3") },)
 //                    LazyRow(Modifier.fillMaxWidth()) {
 //                        itemsIndexed(movs.value)
 //                        {

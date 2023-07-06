@@ -132,7 +132,12 @@ private fun getMeetings(response: String): List<Movie>{
                     item.getDouble("our_rate"),
                     item.getString("url"),
                     listOf(poss.getInt("imdb"),poss.getInt("kp"),poss.getInt("imdibil")),
-                    item.getInt("id_e")
+                    if (item.has("id_e") && !item.isNull("id_e")) {
+                        item.getInt("id_e")
+                    } else
+                    {
+                        null
+                    },
 
                 )
             )
@@ -183,6 +188,9 @@ fun Index(navController: NavHostController)
     val courses = remember {
         mutableStateOf(listOf<Movie>())
     }
+    val coursesBase = remember {
+        mutableStateOf(listOf<Movie>())
+    }
     val loaded = remember {
         MutableTransitionState(true).apply {
             targetState = true // start the animation immediately
@@ -198,7 +206,7 @@ fun Index(navController: NavHostController)
     val listState: LazyListState = rememberLazyListState()
     val i = 0;
     getData(2, LocalContext.current, courses, loaded)
-
+    val ctx: Context = LocalContext.current
 
     val sort = remember {
         mutableStateOf(0)
@@ -223,6 +231,8 @@ fun Index(navController: NavHostController)
                     sort.value = 0
                     courses.value = courses.value.sortedByDescending { it.id}
                 }
+                Toast.makeText(ctx, courses.value.size.toString(), Toast.LENGTH_SHORT).show()
+                Log.d("MyLog", courses.value.size.toString())
 
             },  modifier = Modifier
                 .height(35.dp)
@@ -378,7 +388,7 @@ fun MeetingCard(
                 }
 
                 Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    if(selected == null && !movie.descr.isNullOrBlank())
+                    if(selected == null)
                     {
                         LazyColumn(
                             modifier = Modifier
