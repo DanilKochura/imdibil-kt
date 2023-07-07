@@ -137,6 +137,16 @@ fun Profile(navController: NavHostController)
             Column (verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
                 Text(text = user.value.avgRate!!.toString(), color = getColor(user.value.avgRate!!) , fontSize = 25.sp, fontWeight = FontWeight(600))
                 Text(text = user.value.amountOfMeetings.toString()+"/"+amount.value.toString(), fontSize = 25.sp)
+                Button(onClick = {
+                    val token = context.getSharedPreferences("token_access", 0)
+                    token.edit().clear().apply()
+                    context.startActivity(Intent(context, LoginActivity::class.java))
+                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier.height(35.dp)
+                ) {
+                    Text(text = "Выход")
+
+                }
             }
         }
 
@@ -165,14 +175,7 @@ fun Profile(navController: NavHostController)
                 }
             }
         }
-        Button(onClick = {
-            val token = context.getSharedPreferences("token_access", 0)
-            token.edit().clear().apply()
-            context.startActivity(Intent(context, LoginActivity::class.java))
-        }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
-            Text(text = "Выход")
 
-        }
 
     }
 }
