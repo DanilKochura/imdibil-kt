@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,6 +53,8 @@ import com.example.imdibil.components.GoldText
 import com.example.imdibil.models.Movie
 import com.example.imdibil.models.Rate
 import com.example.imdibil.models.User
+import com.example.imdibil.ui.theme.Gold
+import com.example.imdibil.ui.theme.MainDark
 import org.json.JSONObject
 
 
@@ -117,61 +121,125 @@ fun Profile(navController: NavHostController)
     val userRates = remember {
         mutableStateOf(listOf<Rate>())
     }
+    val openDialog = remember { mutableStateOf(false) }
     val (showDialog, setShowDialog) =  remember { mutableStateOf(false) }
      getUser(3, context, user, userRates, navController, amount);
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(10.dp)) {
+            .background(color = MainDark)) {
         Row (
             Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.2f)){
+                .fillMaxHeight(0.2f)
+                .padding(10.dp)){
             AsyncImage(model = user.value.avatar, contentDescription = "dsdfsdf",
                 Modifier
-                    .clip(
-                        RoundedCornerShape(10)
-                    )
-                    .fillMaxWidth(0.5f)
+
+                    .padding(5.dp)
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(50))
             )
             Column (verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
-                Text(text = user.value.avgRate!!.toString(), color = getColor(user.value.avgRate!!) , fontSize = 25.sp, fontWeight = FontWeight(600))
-                Text(text = user.value.amountOfMeetings.toString()+"/"+amount.value.toString(), fontSize = 25.sp)
+                Row(Modifier.fillMaxWidth(), Arrangement.Center) {
+                    GoldText(user.value.name, 28.sp, 600)
+                }
+               Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                   Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                       Text(text = user.value.avgRate!!.toString(), color = getColor(user.value.avgRate!!) , fontSize = 25.sp, fontWeight = FontWeight(600))
+                        Text(text = "Ср. оценка", color = Color.LightGray, fontSize = 12.sp)
+                   }
+                   Column (horizontalAlignment = Alignment.CenterHorizontally) {
+                       Text(text = user.value.amountOfMeetings.minus(1).toString()+"/"+amount.value.toString(), fontSize = 25.sp, color = Color.White)
+                       Text(text = "Кол-во встреч", color = Color.LightGray, fontSize = 12.sp)
+
+                   }
+               }
+
+            }
+        }
+        if (openDialog.value) {
+            AlertDialog(
+                onDismissRequest = {
+                    openDialog.value = false
+                },
+                title = { Text(text = "Подтверждение действия") },
+                text = { Text("Вы действительно хотите выйти из аккаунта?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val token = context.getSharedPreferences("token_access", 0)
+                            token.edit().clear().apply()
+                            context.startActivity(Intent(context, LoginActivity::class.java))
+                            openDialog.value = false }
+                    ) {
+                        Text("Да", fontSize = 22.sp)
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { openDialog.value = false }
+                    ) {
+                        Text("Отмена", fontSize = 22.sp)
+                    }
+                }
+
+            )
+        }
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+            )
+            .clip(
+                RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+            )) {
+            if (user.value.avgRate !== null)
+            {
+                Row (horizontalArrangement = Arrangement.SpaceEvenly){
+//                Text(text = "Средняя оценка: ")
+
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Button(onClick = {setShowDialog(true)}, colors = ButtonDefaults.buttonColors(Gold), shape = RoundedCornerShape(50.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(50.dp) ) {
+                    Text(text = "Добавить тройку")
+                }
+
+//                Button(onClick = {
+//                    openDialog.value = true
+//                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+//                    modifier = Modifier.height(50.dp)
+//                ) {
+//                    Text(text = "Выход")
+//                }
+            }
+            DialogAddMovie(showDialog, setShowDialog, context = context, movies)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LazyColumn(Modifier.fillMaxWidth()) {
+                itemsIndexed(
+                    userRates.value
+                ) { index, rate ->
+                    Row (horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                        Text(text = rate.movie_name!!, modifier = Modifier.fillMaxWidth(0.6f))
+                        Text(text = rate.rate.toString(), style = getTextStyle( rate.rate.toDouble()), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    }
+                }
+            }
+            Column() {
+
                 Button(onClick = {
-                    val token = context.getSharedPreferences("token_access", 0)
-                    token.edit().clear().apply()
-                    context.startActivity(Intent(context, LoginActivity::class.java))
+                    openDialog.value = true
                 }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     modifier = Modifier.height(35.dp)
                 ) {
                     Text(text = "Выход")
-
-                }
-            }
-        }
-
-        Row(Modifier.fillMaxWidth(), Arrangement.Center) {
-            GoldText(user.value.name, 28.sp, 600)
-        }
-        if (user.value.avgRate !== null)
-        {
-            Row (horizontalArrangement = Arrangement.SpaceEvenly){
-//                Text(text = "Средняя оценка: ")
-
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        GoldButton("Добавить тройку", {setShowDialog(true)})
-        DialogAddMovie(showDialog, setShowDialog, context = context, movies)
-        Spacer(modifier = Modifier.height(10.dp))
-
-        LazyColumn(Modifier.fillMaxWidth()) {
-            itemsIndexed(
-                userRates.value
-            ) { index, rate ->
-                Row (horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                    Text(text = rate.movie_name!!, modifier = Modifier.fillMaxWidth(0.6f))
-                    Text(text = rate.rate.toString(), color = getColor( rate.rate.toDouble()))
                 }
             }
         }

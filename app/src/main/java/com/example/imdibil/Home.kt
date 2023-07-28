@@ -59,6 +59,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -75,6 +76,7 @@ import com.example.imdibil.models.Rate
 import com.example.imdibil.models.User
 import com.example.imdibil.ui.theme.Gold
 import com.example.imdibil.ui.theme.Green
+import com.example.imdibil.ui.theme.GreenDark
 import com.example.imdibil.ui.theme.MainDark
 import com.example.imdibil.ui.theme.Red
 import org.json.JSONObject
@@ -522,7 +524,7 @@ fun MeetingCard(
                             .height(40.dp)
                             .padding(horizontal = 5.dp)
                     )
-                    Text(text = movie.imdb.toString(), color = getColor(movie.imdb))
+                    Text(text = movie.imdb.toString(), color = getColor(movie.imdb), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     if(movie.positions !== null)
                     {
                         Text(text = movie.positions[0].toString(), color = Color.Gray)
@@ -537,7 +539,7 @@ fun MeetingCard(
                             .height(40.dp)
                             .padding(horizontal = 5.dp)
                             .clickable { uriHandler.openUri(movie.url) })
-                    Text(text = movie.kp.toString(), color = getColor(movie.kp))
+                    Text(text = movie.kp.toString(), color = getColor(movie.kp), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     if(movie.positions !== null)
                     {
                         Text(text = movie.positions[1].toString(), color = Color.Gray)
@@ -553,7 +555,7 @@ fun MeetingCard(
                             Modifier
                                 .height(40.dp)
                                 .padding(horizontal = 5.dp))
-                        Text(text = movie.our.toString(), color = getColor(movie.our))
+                        Text(text = movie.our.toString(), color = getColor(movie.our), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         if(movie.positions !== null)
                         {
                             Text(text = movie.positions[2].toString(), color = Color.Gray)
@@ -565,9 +567,50 @@ fun MeetingCard(
         }
     }
 }
+fun getTextStyle(rate: Double): TextStyle {
+    return if(rate == 10.0)
+    {
+        TextStyle(
+            color = Gold,
 
+        )
+    }
+    else if(rate >= 8.9)
+    {
+        TextStyle(
+            color = GreenDark
+        )
+    }
+    else if (rate >= 8.0)
+    {
+        TextStyle(
+            color = GreenDark.copy(alpha = 0.7f)
+        )
+
+    } else if (rate >= 7.0)
+    {
+        TextStyle(
+            color = GreenDark.copy(alpha = 0.5f)
+        )
+
+    } else if(rate < 5.0)
+    {
+        TextStyle(
+            color = Red
+        )
+    } else
+    {
+        TextStyle(
+            color = Color.Gray
+        )
+    }
+}
 fun getColor(rate: Double): Color {
-    return if (rate >= 7.0)
+    return if(rate == 10.0)
+    {
+        Gold
+    }
+    else if (rate >= 7.0)
     {
         Green
     } else if(rate < 5.0)
