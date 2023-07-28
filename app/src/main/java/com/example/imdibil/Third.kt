@@ -46,7 +46,11 @@ fun Thirds(navHostController: NavHostController, ctx: Context) {
             targetState = true // start the animation immediately
         }
     }
-
+    val error = remember {
+        MutableTransitionState(false).apply {
+            targetState = false // start the animation immediately
+        }
+    }
     AnimatedVisibility(visibleState = loaded) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
@@ -54,7 +58,10 @@ fun Thirds(navHostController: NavHostController, ctx: Context) {
     }
     val listState: LazyListState = rememberLazyListState()
     val i = 0;
-    getThirdsRaw(ctx, thirds, loaded)
+    AnimatedVisibility(visibleState = error) {
+        ErrorScreen()
+    }
+    getThirdsRaw(ctx, thirds, loaded, error)
 
 
     val sort = remember {
@@ -79,6 +86,7 @@ fun Thirds(navHostController: NavHostController, ctx: Context) {
             }
         }
     }
+
 }
 private fun getThirds(response: String): List<Third>{
     if (response.isEmpty()) return listOf()
@@ -152,7 +160,8 @@ private fun getThirds(response: String): List<Third>{
 private fun getThirdsRaw(
     context: Context,
     thirds: MutableState<List<Third>>,
-    loaded: MutableTransitionState<Boolean>
+    loaded: MutableTransitionState<Boolean>,
+    error: MutableTransitionState<Boolean>
 )
 {
 
@@ -165,11 +174,17 @@ private fun getThirdsRaw(
                 response ->
 
             val list = getThirds(response)
+            if(list.isEmpty())
+            {
+                error.targetState = true
+            }
             thirds.value = list
             loaded.targetState = false
 
         },
         {
+            error.targetState = true
+            loaded.targetState = false
             Log.d("MyLog", "VolleyError: $it")
         }
     )

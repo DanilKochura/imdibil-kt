@@ -60,6 +60,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -76,12 +78,21 @@ import com.example.imdibil.ui.theme.Green
 import com.example.imdibil.ui.theme.MainDark
 import com.example.imdibil.ui.theme.Red
 import org.json.JSONObject
+import kotlin.math.log
 
 
 private fun getMeetings(response: String): List<Movie>{
     if (response.isEmpty()) return listOf()
     val list = ArrayList<Movie>()
-    val mainObject = JSONObject(response).getJSONArray("data")
+    var mainObject1 = JSONObject.NULL
+    try {
+         mainObject1 = JSONObject(response)
+    } catch (e: Exception)
+    {
+        Log.d("MyLog", e.message.toString())
+        return listOf()
+    }
+    val mainObject = mainObject1.getJSONArray("data")
 
     for (i in 0 until mainObject.length()){ //mainObject.length()
         val item = mainObject[i] as JSONObject
@@ -154,7 +165,9 @@ private fun getData(
     page: Int,
     context: Context,
     movies: MutableState<List<Movie>>,
-    loaded: MutableTransitionState<Boolean>
+    loaded: MutableTransitionState<Boolean>,
+    error: MutableTransitionState<Boolean>
+
 )
 {
 
@@ -169,11 +182,18 @@ private fun getData(
                 response ->
 
             val list = getMeetings(response)
+            if(list.isEmpty())
+            {
+                error.targetState = true
+            }
             movies.value = list
-            loaded.targetState = true
+            loaded.targetState = false
 
         },
         {
+            error.targetState = true
+            loaded.targetState = false
+
             Log.d("MyLog", "VolleyError: $it")
         }
     )
@@ -205,7 +225,13 @@ fun Index(navController: NavHostController)
 
     val listState: LazyListState = rememberLazyListState()
     val i = 0;
-    getData(2, LocalContext.current, courses, loaded)
+    val error = remember {
+        MutableTransitionState(false).apply {
+            targetState = false // start the animation immediately
+        }
+    }
+    getData(2, LocalContext.current, courses, loaded, error)
+
     val ctx: Context = LocalContext.current
 
     val sort = remember {
@@ -307,6 +333,27 @@ fun Index(navController: NavHostController)
                 MeetingCard(movie = item, navController)
             }
         }
+    }
+
+    AnimatedVisibility(visibleState = error) {
+        ErrorScreen()
+    }
+}
+@Preview
+@Composable
+fun ErrorScreen()
+{
+    val uriHandler = LocalUriHandler.current
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.width(300.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(painter = painterResource(id = R.drawable.devel), contentDescription = "dev", modifier = Modifier
+                        .padding(5.dp)
+                        .size(100.dp))
+                    Text(text = "Проиозшла ошибка. Повторите оппытку позже или обратитесь в ", textAlign = TextAlign.Center)
+                    Text(text = "службу поддержки!", color = Color.Blue, modifier = Modifier.clickable {
+                        uriHandler.openUri("https://t.me/kochuradanil")
+                    })
+                }
     }
 }
 
