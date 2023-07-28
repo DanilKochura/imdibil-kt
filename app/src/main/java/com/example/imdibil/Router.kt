@@ -347,7 +347,7 @@ fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, contex
             onDismissRequest = {
             },
             title = {
-                Text("Оценить")
+                Text("Добавить тройку")
             },
             confirmButton = {
                 Button(
