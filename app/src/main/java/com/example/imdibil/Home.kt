@@ -410,10 +410,10 @@ fun MeetingCard(
             .height(480.dp)
             .fillMaxWidth()
             .combinedClickable(
-                onClick = { },
+                onClick = { visible.targetState = !visible.targetState },
                 onLongClick = {
 
-                    visible.targetState = !visible.targetState
+
                 },
             ))
         {
