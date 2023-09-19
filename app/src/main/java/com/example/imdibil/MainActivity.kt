@@ -10,14 +10,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.android.volley.Request
 import com.android.volley.Response
@@ -25,10 +44,13 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.imdibil.components.BottomNavigationMenu
 import com.example.imdibil.models.Movie
+import com.example.imdibil.ui.theme.Gold
 import com.example.imdibil.ui.theme.TestTheme
+import com.example.imdibil.viewModel.MainViewModel
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONException
@@ -47,19 +69,70 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun getUserByToken(token: Int)
+    {
+
+    }
+    private fun addToCart(id: Int)
+    {
+        val db = Firebase.firestore
+        db.collection("users").document("G91gkv0Rn6M7PBxSrxVl").collection("cart").add(
+            hashMapOf("id" to "2")
+        )
+            .addOnSuccessListener { documentReference ->
+                Log.d("myLog", "DocumentSnapshot added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.w("myLog", "Error adding document", e)
+            }
+    }
+
+
+    private fun createOrUpdateToken(token: String?, context: Context)
+    {
+        val db = Firebase.firestore
+        db.collection("users")
+            .whereEqualTo("token", token)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    Log.d("myLog", "${document.id} => ${document.data}")
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w("myLog", "Error getting documents: ", exception)
+                val user = hashMapOf(
+                    "token" to token,
+                )
+                db.collection("users")
+                    .add(user)
+
+                    .addOnSuccessListener { documentReference ->
+                        Log.d("myLog", "DocumentSnapshot added with ID: ${documentReference.id}")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w("myLog", "Error adding document", e)
+                    }
+                // Log and toast
+                sendToken(token, context)
+            }
+    }
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            analytics = Firebase.analytics
-
+            analytics = Firebase.analytics;
             val nav = rememberNavController()
             val context = LocalContext.current
             val title = remember {
                 mutableStateOf("")
             }
             val topBarDisabled = remember {
+                mutableStateOf(false)
+            }
+            val FABState = remember {
                 mutableStateOf(false)
             }
             val loaded = remember {
@@ -78,49 +151,83 @@ class MainActivity : ComponentActivity() {
 
                 // Get new FCM registration token
                 val token = task.result
+                createOrUpdateToken(token = token, context = context)
+
+
 
                 // Log and toast
                 sendToken(token, context)
+
+
+// Add a new document with a generated ID
+
             })
 
-            LaunchedEffect(nav)
-            {
-                nav.currentBackStackEntryFlow.collect { backStackEntry ->
-                    // You can map the title based on the route using:
-                    title.value = getTitleByRoute(context, backStackEntry.destination.route)
-                    topBarDisabled.value = backStackEntry.destination.route == "course/{id}"
-                }
-            }
+
             TestTheme {
-                Scaffold(
-                    bottomBar = { BottomNavigationMenu(navController = nav) },
-//                    topBar = {
-//                        if (!topBarDisabled.value) {
-//                            TopAppBar(backgroundColor = MaterialTheme.colorScheme.background)
-//                            {
-//                                Text(
-//                                    title.value,
-//                                    fontSize = 22.sp,
-//                                    textAlign = TextAlign.Center,
-//                                    modifier = Modifier.fillMaxWidth()
-//                                )
-//
-//                            }
-//                        }
-//                    },
-                    content = {padding ->
-                        Column(modifier = Modifier
-                            .padding(padding)
-                            .fillMaxSize()) {
-
-                            NavGraph(navHostController = nav)
-                        }
-
-                    }
-                )
+                GlobalScreen(nav = nav)
             }
         }
     }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun GlobalScreen(nav: NavHostController, mainViewModel: MainViewModel = viewModel())
+    {
+        val context = LocalContext.current
+        val title = remember {
+            mutableStateOf("")
+        }
+        val topBarDisabled = remember {
+            mutableStateOf(false)
+        }
+        val loaded = remember {
+            MutableTransitionState(true).apply {
+                targetState = true // start the animation immediately
+            }
+        }
+        LaunchedEffect(nav)
+        {
+            nav.currentBackStackEntryFlow.collect { backStackEntry ->
+                // You can map the title based on the route using:
+                title.value = getTitleByRoute(context, backStackEntry.destination.route)
+                topBarDisabled.value = backStackEntry.destination.route == "course/{id}"
+                mainViewModel.FABState.value = backStackEntry.destination.route == "profile"
+            }
+        }
+        Scaffold(
+            bottomBar = { BottomNavigationMenu(navController = nav) },
+
+            floatingActionButton = {
+                if(mainViewModel.FABState.value)
+                {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 35.dp, end = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        Button(onClick = {mainViewModel.setShowDialog(true)}, colors = ButtonDefaults.buttonColors(Gold), shape = RoundedCornerShape(50.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp) ) {
+                            Icon(painter = painterResource(id = R.drawable.add_third), contentDescription = "", tint = Color.White, modifier = Modifier
+                                .padding(end = 5.dp)
+                                .size(30.dp))
+                            Text(text = "Добавить тройку", color = Color.White)
+                        }
+                    }
+                }
+            },
+            content = {padding ->
+                Column(modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()) {
+
+                    NavGraph(navHostController = nav)
+                }
+
+            }
+        )
+    }
+
 
     private fun sendToken(token: String?, context: Context) {
         var url = "https://imdibil.ru/api/setToken.php?" +
@@ -161,8 +268,11 @@ class MainActivity : ComponentActivity() {
     }
 
 
-
 }
+
+
+
+
 fun postMoviesDataUsingVolley(movies: List<String>, context: Context, token: String? = getToken(context)) {
     // url to post our data
     val url = "https://imdibil.ru/api/getMovie.php"

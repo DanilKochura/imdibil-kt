@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,13 +35,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -55,12 +62,13 @@ import com.example.imdibil.models.Rate
 import com.example.imdibil.models.User
 import com.example.imdibil.ui.theme.Gold
 import com.example.imdibil.ui.theme.MainDark
+import com.example.imdibil.viewModel.MainViewModel
 import org.json.JSONObject
 
 
 @Composable
 fun NavGraph(
-    navHostController: NavHostController
+    navHostController: NavHostController, mainViewModel: MainViewModel = viewModel()
 ) {
     val ctx = LocalContext.current
     val token = LocalContext.current.getSharedPreferences("token_access", 0)
@@ -71,17 +79,21 @@ fun NavGraph(
     val t = getToken(ctx)
     NavHost(navController = navHostController, startDestination = "home"){
         composable("profile"){
-            Profile(navHostController)
+            Profile(navHostController, mainViewModel)
 
         }
         composable("news"){
-            Thirds(navHostController, ctx)
+            Thirds(navHostController, ctx, mainViewModel)
         }
         composable("notifications"){
             InDev()
         }
-        composable("home"){
-                Index(navController = navHostController)
+        composable("home?scroll={scroll}",
+            arguments = listOf(navArgument("scroll") { defaultValue = 0 })){
+                backStackEntry ->
+                Index(navController = navHostController,
+                    backStackEntry.arguments?.getString("scroll")?.toInt() ?: 0
+                )
 
 
         //            Index(navController = navHostController);
@@ -106,7 +118,7 @@ fun NavGraph(
 
 
 @Composable
-fun Profile(navController: NavHostController)
+fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
 {
     val movies = remember {
         mutableStateOf(arrayListOf<Movie>())
@@ -122,7 +134,7 @@ fun Profile(navController: NavHostController)
         mutableStateOf(listOf<Rate>())
     }
     val openDialog = remember { mutableStateOf(false) }
-    val (showDialog, setShowDialog) =  remember { mutableStateOf(false) }
+
      getUser(3, context, user, userRates, navController, amount);
     Column(
         Modifier
@@ -150,7 +162,7 @@ fun Profile(navController: NavHostController)
                         Text(text = "Ср. оценка", color = Color.LightGray, fontSize = 12.sp)
                    }
                    Column (horizontalAlignment = Alignment.CenterHorizontally) {
-                       Text(text = user.value.amountOfMeetings.minus(1).toString()+"/"+amount.value.toString(), fontSize = 25.sp, color = Color.White)
+                       Text(text = user.value.amountOfMeetings.toString()+"/"+amount.value.toString(), fontSize = 25.sp, color = Color.White)
                        Text(text = "Кол-во встреч", color = Color.LightGray, fontSize = 12.sp)
 
                    }
@@ -202,46 +214,57 @@ fun Profile(navController: NavHostController)
 
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Button(onClick = {setShowDialog(true)}, colors = ButtonDefaults.buttonColors(Gold), shape = RoundedCornerShape(50.dp),
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(50.dp) ) {
-                    Text(text = "Добавить тройку")
-                }
 
-//                Button(onClick = {
-//                    openDialog.value = true
-//                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-//                    modifier = Modifier.height(50.dp)
-//                ) {
-//                    Text(text = "Выход")
-//                }
-            }
-            DialogAddMovie(showDialog, setShowDialog, context = context, movies)
-            Spacer(modifier = Modifier.height(10.dp))
+            DialogAddMovie(mainViewModel.showDialog.value, mainViewModel::setShowDialog, context = context, movies)
 
             LazyColumn(Modifier.fillMaxWidth()) {
+                item {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                }
                 itemsIndexed(
                     userRates.value
                 ) { index, rate ->
-                    Row (horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                        Text(text = rate.movie_name!!, modifier = Modifier.fillMaxWidth(0.6f))
-                        Text(text = rate.rate.toString(), style = getTextStyle( rate.rate.toDouble()), fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    }
-                }
-            }
-            Column() {
+                    Card(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                        .shadow(2.dp, RoundedCornerShape(10.dp))
+                        , colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        ))
+                    {
+                        Row (horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
+                            .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Box (modifier = Modifier.fillMaxWidth(0.1f)){
+                                AsyncImage(model = rate.movie_poster, contentDescription = "", modifier = Modifier.height(50.dp).align(
+                                    Alignment.TopStart))
 
-                Button(onClick = {
-                    openDialog.value = true
-                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    modifier = Modifier.height(35.dp)
-                ) {
-                    Text(text = "Выход")
+                            }
+                           Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                               Text(text = rate.movie_name!!, color = Color.Black, modifier = Modifier.fillMaxWidth(0.6f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                               Text(text = rate.rate.toString(), style = getTextStyle( rate.rate.toDouble()), fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                           }
+                        }
+                    }
+
+                }
+                item {
+//                    Column() {
+//
+//                       Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+//                           Button(onClick = {
+//                               openDialog.value = true
+//                           }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+//                               modifier = Modifier.height(35.dp)
+//                           ) {
+//                               Text(text = "Выход")
+//                           }
+//                       }
+//                    }
+                    Spacer(modifier = Modifier.height(70.dp))
                 }
             }
+
         }
 
 
@@ -316,7 +339,7 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
                 for (i in 0 until  ratesObj.length()-1)
                 {
                     val item = ratesObj[i] as JSONObject
-                    rateArray.add(Rate(item.getInt("rate"), null, item.getString("name_m")
+                    rateArray.add(Rate(item.getInt("rate"), null, item.getString("name_m"), item.getString("poster")
                     ))
                 }
                 rates.value = rateArray
@@ -337,7 +360,7 @@ fun getUser(id: Int, context: Context, mutableState: MutableState<User>, rates :
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, context: Context, movies: MutableState<ArrayList<Movie>>) {
+fun DialogAddMovie(showDialog: Boolean, setShowDialogG: (Boolean) -> Unit, context: Context, movies: MutableState<ArrayList<Movie>>) {
     val username = remember { mutableStateOf(arrayListOf(TextFieldValue(), TextFieldValue(),TextFieldValue())) }
     val movs = remember {
         mutableStateOf(listOf("", "",""))
@@ -366,7 +389,7 @@ fun DialogAddMovie(showDialog: Boolean, setShowDialog: (Boolean) -> Unit, contex
                 Button(
                     onClick = {
                         // Change the state to close the dialog
-                        setShowDialog(false)
+                        setShowDialogG(false)
                     },
                 ) {
                     Text("Закрыть")

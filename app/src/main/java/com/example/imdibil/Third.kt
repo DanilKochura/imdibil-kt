@@ -33,14 +33,13 @@ import com.android.volley.toolbox.Volley
 import com.example.imdibil.components.GoldText
 import com.example.imdibil.models.Movie
 import com.example.imdibil.models.Third
+import com.example.imdibil.viewModel.MainViewModel
 import org.json.JSONArray
 import org.json.JSONObject
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Thirds(navHostController: NavHostController, ctx: Context) {
-    val thirds = remember {
-        mutableStateOf(listOf<Third>())
-    }
+fun Thirds(navHostController: NavHostController, ctx: Context, mainViewModel: MainViewModel) {
+
     val loaded = remember {
         MutableTransitionState(true).apply {
             targetState = true // start the animation immediately
@@ -61,14 +60,16 @@ fun Thirds(navHostController: NavHostController, ctx: Context) {
     AnimatedVisibility(visibleState = error) {
         ErrorScreen()
     }
-    getThirdsRaw(ctx, thirds, loaded, error)
-
+    if(mainViewModel.thirds.value.isEmpty())
+    {
+        getThirdsRaw(ctx, mainViewModel.thirds, loaded, error)
+    }
 
     val sort = remember {
         mutableStateOf(0)
     }
     LazyColumn(Modifier.fillMaxSize()) {
-        itemsIndexed(thirds.value)
+        itemsIndexed(mainViewModel.thirds.value)
         {
                 it, item ->
 

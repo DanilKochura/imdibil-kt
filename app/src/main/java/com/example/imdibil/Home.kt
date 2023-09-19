@@ -47,10 +47,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,6 +81,7 @@ import com.example.imdibil.ui.theme.Green
 import com.example.imdibil.ui.theme.GreenDark
 import com.example.imdibil.ui.theme.MainDark
 import com.example.imdibil.ui.theme.Red
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import kotlin.math.log
 
@@ -205,7 +208,7 @@ private fun getData(
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun Index(navController: NavHostController)
+fun Index(navController: NavHostController, scroll: Int)
 {
     val courses = remember {
         mutableStateOf(listOf<Movie>())
@@ -218,6 +221,7 @@ fun Index(navController: NavHostController)
             targetState = true // start the animation immediately
         }
     }
+    val coroutineScope = rememberCoroutineScope()
 
     AnimatedVisibility(visibleState = loaded) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -239,6 +243,14 @@ fun Index(navController: NavHostController)
     val sort = remember {
         mutableStateOf(0)
     }
+    if (scroll !== 0)
+    {
+
+    }
+    var scrolled = remember {
+        mutableStateOf(false)
+    }
+
     Column(Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier

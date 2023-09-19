@@ -2,6 +2,7 @@ package com.example.imdibil.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.telephony.BarringInfo
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -19,7 +20,14 @@ import androidx.core.view.WindowCompat
 private val DarkColorScheme = darkColorScheme(
     primary = Color.White,
     secondary = MainDark,
-    tertiary = Color.Gray
+    tertiary = Color.Gray,
+
+)
+
+private val BarbieColorScheme = darkColorScheme(
+    primary = Color.White,
+    secondary = Barbie,
+    tertiary = Color.Gray,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -43,6 +51,7 @@ fun TestTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
+    barbieMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -50,7 +59,7 @@ fun TestTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
+        barbieMode -> BarbieColorScheme
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
