@@ -74,6 +74,7 @@ fun getStatistycs(
         context: Context,
         rates: MutableState<List<UserRates>>,
         ratesPrepared: MutableState<List<UserRates>>,
+        movies: MutableState<List<String>>,
         loaded: MutableTransitionState<Boolean>,
         error: MutableTransitionState<Boolean>
 
@@ -90,12 +91,15 @@ fun getStatistycs(
                                 response ->
 
                         val list = getStats(response)
-                        if(list.isEmpty())
+                        val ratesPair = list.first
+                        val moviesPair = list.second
+                        if(ratesPair.isEmpty())
                         {
                                 error.targetState = true
                         }
-                        rates.value = list
-                        ratesPrepared.value = list
+                        rates.value = ratesPair
+                        ratesPrepared.value = ratesPair
+                        movies.value = moviesPair
                         loaded.targetState = false
 
                 },
@@ -109,9 +113,8 @@ fun getStatistycs(
         queue.add(sRequest)
 }
 
-fun getStats(response: String): List<UserRates>
-{
-        if (response.isEmpty()) return listOf()
+fun getStats(response: String): Pair<List<UserRates>, List<String>> {
+        if (response.isEmpty()) return Pair(listOf<UserRates>(), listOf<String>())
         val list = ArrayList<UserRates>()
         var mainObject1 = JSONObject.NULL
         try {
@@ -119,7 +122,7 @@ fun getStats(response: String): List<UserRates>
         } catch (e: Exception)
         {
                 Log.d("MyLog", e.message.toString())
-                return listOf()
+                return Pair(listOf<UserRates>(), listOf<String>())
         }
         val dataObject = mainObject1.getJSONObject("data") as JSONObject
 
@@ -147,7 +150,7 @@ fun getStats(response: String): List<UserRates>
 
 
 
-        return list
+        return Pair(list, tmp)
 }
 
 fun parsUserRates(list: ArrayList<UserRates>, item: JSONObject): ArrayList<UserRates> {

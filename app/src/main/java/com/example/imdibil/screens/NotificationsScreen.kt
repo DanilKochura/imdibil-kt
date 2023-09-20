@@ -73,42 +73,44 @@ import kotlinx.coroutines.launch
 @Composable
 fun NotTest(viewModel: StatisticsViewModel = androidx.lifecycle.viewmodel.compose.viewModel())
 {
-    val labels = listOf("Апокалипсис сегодня",
-        "Завтрак у Тиффани",
-        "Римские каникулы",
-        "Жизнь других",
-        "Лобстер",
-        "Полночь в Париже",
-        "Убийца",
-        "Убить пересмешника",
-        "Призрак в доспехах",
-        "Адамовы яблоки",
-        "Американский психопат",
-        "На грани",
-        "Достучаться до небес",
-        "Укрась прощальное утро цветами обещания",
-        "Залечь на дно в Брюгге",
-        "Реквием по мечте",
-        "Святая Гора",
-        "Форма голоса",
-        "Общество мертвых поэтов",
-        "Остров сокровищ",
-        "Еще по одной",
-        "Сладкая жизнь",
-        "Охота",
-        "Бьютифул",
-        "Капитан Фантастик",
-        "Отец",
-        "Господин Никто",
-        "Психо",
-        "Ванильное небо",
-        "В джазе только девушки",
-        "Душа",
-        "Таксист",
-        "Братья Блюз",
-        "Молодость",
-        "Нелюбовь",
-        "Враг", "Cнайпер")
+    val labels = remember {
+        mutableStateOf(listOf("Апокалипсис сегодня",
+            "Завтрак у Тиффани",
+            "Римские каникулы",
+            "Жизнь других",
+            "Лобстер",
+            "Полночь в Париже",
+            "Убийца",
+            "Убить пересмешника",
+            "Призрак в доспехах",
+            "Адамовы яблоки",
+            "Американский психопат",
+            "На грани",
+            "Достучаться до небес",
+            "Укрась прощальное утро цветами обещания",
+            "Залечь на дно в Брюгге",
+            "Реквием по мечте",
+            "Святая Гора",
+            "Форма голоса",
+            "Общество мертвых поэтов",
+            "Остров сокровищ",
+            "Еще по одной",
+            "Сладкая жизнь",
+            "Охота",
+            "Бьютифул",
+            "Капитан Фантастик",
+            "Отец",
+            "Господин Никто",
+            "Психо",
+            "Ванильное небо",
+            "В джазе только девушки",
+            "Душа",
+            "Таксист",
+            "Братья Блюз",
+            "Молодость",
+            "Нелюбовь",
+            "Враг", "Cнайпер"))
+    }
     val pointsData: ArrayList<Point> =
         arrayListOf()
     val pointsDataKP: ArrayList<Point> =
@@ -175,7 +177,7 @@ fun NotTest(viewModel: StatisticsViewModel = androidx.lifecycle.viewmodel.compos
     }
     if(viewModel.data.value.isEmpty())
     {
-        getStatistycs(LocalContext.current, viewModel.data, viewModel.dataPrepared, loaded, loaded)
+        getStatistycs(LocalContext.current, viewModel.data, viewModel.dataPrepared, movies = labels,  loaded, loaded)
     }
 
     var list = arrayListOf(Line(
@@ -227,10 +229,10 @@ fun NotTest(viewModel: StatisticsViewModel = androidx.lifecycle.viewmodel.compos
         .backgroundColor(MainDark)
         .axisLineColor(Gold)
         .axisLabelColor(Color.LightGray)
-        .steps(labels.size -1)
+        .steps(labels.value.size -1)
         .axisConfig(AxisConfig(true, true,  15.dp))
 
-        .labelData { i -> labels[i] }
+        .labelData { i -> labels.value[i] }
         .labelAndAxisLinePadding(15.dp).bottomPadding(10.dp)
         .shouldDrawAxisLineTillEnd(true)
         .build()

@@ -118,7 +118,7 @@ fun NavGraph(
         ctx.startActivity(Intent(ctx, LoginActivity::class.java))
     }
     val t = getToken(ctx)
-    NavHost(navController = navHostController, startDestination = "homeHf,"){
+    NavHost(navController = navHostController, startDestination = "home"){
         composable("profile"){
             Profile(navHostController, mainViewModel)
 
