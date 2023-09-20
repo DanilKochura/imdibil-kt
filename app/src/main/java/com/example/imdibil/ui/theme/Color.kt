@@ -18,3 +18,4 @@ val GreenDark = Color(0xFF187700)
 val Red = Color(0xFFAC0000)
 
 val Barbie = Color(0xFFEC4399)
+val Orange = Color(0xFFFF762C)

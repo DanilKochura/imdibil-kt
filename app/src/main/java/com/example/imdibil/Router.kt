@@ -1,7 +1,10 @@
 package com.example.imdibil
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.graphics.drawable.GradientDrawable.Orientation
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -19,6 +22,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Checkbox
+import androidx.compose.material.CheckboxDefaults
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,17 +39,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.Color.Companion.Yellow
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextLayoutResult
@@ -44,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -51,6 +71,23 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import co.yml.charts.axis.AxisConfig
+import co.yml.charts.axis.AxisData
+import co.yml.charts.axis.DataCategoryOptions
+import co.yml.charts.axis.Gravity
+import co.yml.charts.common.model.AccessibilityConfig
+import co.yml.charts.common.model.PlotType
+import co.yml.charts.common.model.Point
+import co.yml.charts.ui.linechart.LineChart
+import co.yml.charts.ui.linechart.model.GridLines
+import co.yml.charts.ui.linechart.model.IntersectionPoint
+import co.yml.charts.ui.linechart.model.Line
+import co.yml.charts.ui.linechart.model.LineChartData
+import co.yml.charts.ui.linechart.model.LinePlotData
+import co.yml.charts.ui.linechart.model.LineStyle
+import co.yml.charts.ui.linechart.model.SelectionHighlightPoint
+import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
+import co.yml.charts.ui.linechart.model.ShadowUnderLine
 import coil.compose.AsyncImage
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
@@ -60,9 +97,13 @@ import com.example.imdibil.components.GoldText
 import com.example.imdibil.models.Movie
 import com.example.imdibil.models.Rate
 import com.example.imdibil.models.User
+import com.example.imdibil.screens.NotTest
 import com.example.imdibil.ui.theme.Gold
 import com.example.imdibil.ui.theme.MainDark
+import com.example.imdibil.ui.theme.Orange
 import com.example.imdibil.viewModel.MainViewModel
+import com.example.imdibil.viewModel.StatisticsViewModel
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 
@@ -77,7 +118,7 @@ fun NavGraph(
         ctx.startActivity(Intent(ctx, LoginActivity::class.java))
     }
     val t = getToken(ctx)
-    NavHost(navController = navHostController, startDestination = "home"){
+    NavHost(navController = navHostController, startDestination = "homeHf,"){
         composable("profile"){
             Profile(navHostController, mainViewModel)
 
@@ -86,7 +127,7 @@ fun NavGraph(
             Thirds(navHostController, ctx, mainViewModel)
         }
         composable("notifications"){
-            InDev()
+            NotTest()
         }
         composable("home?scroll={scroll}",
             arguments = listOf(navArgument("scroll") { defaultValue = 0 })){
@@ -236,8 +277,11 @@ fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
                         Row (horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
                             .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Box (modifier = Modifier.fillMaxWidth(0.1f)){
-                                AsyncImage(model = rate.movie_poster, contentDescription = "", modifier = Modifier.height(50.dp).align(
-                                    Alignment.TopStart))
+                                AsyncImage(model = rate.movie_poster, contentDescription = "", modifier = Modifier
+                                    .height(50.dp)
+                                    .align(
+                                        Alignment.TopStart
+                                    ))
 
                             }
                            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -278,14 +322,6 @@ fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
 
 
 
-@Composable
-fun Notifications()
-{
-    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "InDev: Notifications")
-
-    }
-}
 
 
 
