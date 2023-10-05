@@ -40,6 +40,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -55,6 +56,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Color.Companion.Yellow
+import androidx.compose.ui.graphics.DefaultShadowColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -101,6 +103,7 @@ import com.example.imdibil.screens.NotTest
 import com.example.imdibil.ui.theme.Gold
 import com.example.imdibil.ui.theme.MainDark
 import com.example.imdibil.ui.theme.Orange
+import com.example.imdibil.ui.theme.TestTheme
 import com.example.imdibil.viewModel.MainViewModel
 import com.example.imdibil.viewModel.StatisticsViewModel
 import kotlinx.coroutines.launch
@@ -242,7 +245,7 @@ fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
         Column(modifier = Modifier
             .fillMaxSize()
             .background(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.secondary,
                 shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
             )
             .clip(
@@ -269,9 +272,9 @@ fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
                     Card(modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp, vertical = 5.dp)
-                        .shadow(2.dp, RoundedCornerShape(10.dp))
+                        .shadow(2.dp, RoundedCornerShape(10.dp), spotColor = MaterialTheme.colorScheme.primary)
                         , colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.secondary
                         ))
                     {
                         Row (horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
@@ -285,7 +288,7 @@ fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
 
                             }
                            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                               Text(text = rate.movie_name!!, color = Color.Black, modifier = Modifier.fillMaxWidth(0.6f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                               Text(text = rate.movie_name!!, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth(0.6f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                                Text(text = rate.rate.toString(), style = getTextStyle( rate.rate.toDouble()), fontWeight = FontWeight.Bold, fontSize = 22.sp)
                            }
                         }
