@@ -486,16 +486,24 @@ fun MeetingCard(
                                     }
                                 }
                             }
-                        }
-                        Log.d("MyLog", rated.value.toString())
-                        if(!rated.value)
-                        {
-                            IconButton(onClick = {
-                                setShowDialog(true)
-                            }, modifier = Modifier.border(2.dp, Gold, RoundedCornerShape(50))) {
-                                Icon(Icons.Default.Add, contentDescription = "add", modifier = Modifier.size(50.dp), tint = Gold)
+                            item {
+                                Log.d("MyLog", rated.value.toString())
+                                if(!rated.value)
+                                {
+                                    Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        IconButton(onClick = {
+                                            setShowDialog(true)
+                                        }, modifier = Modifier.border(2.dp, Gold, RoundedCornerShape(50))) {
+                                            Icon(Icons.Default.Add, contentDescription = "add", modifier = Modifier.size(50.dp), tint = Gold)
+                                        }
+                                    }
+                                }
                             }
                         }
+
                         DialogRate(showDialog, setShowDialog, context = ctx, rating, movie = movie.id)
                     } else
                     {

@@ -138,7 +138,7 @@ private fun getThirds(response: String): List<Third>{
 
             } catch (e: Exception)
             {
-                Log.d("MyLog", e.toString())
+//                Log.d("MyLog", e.toString())
             }
         }
         val item = third[0] as JSONObject

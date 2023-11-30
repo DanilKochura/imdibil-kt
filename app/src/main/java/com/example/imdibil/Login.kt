@@ -140,7 +140,7 @@ fun login(username: MutableState<TextFieldValue>, password: MutableState<TextFie
         url,
         {
                 response ->
-            Log.d("MyLog", response)
+//            Log.d("MyLog", response)
             val token = context.getSharedPreferences("token_access", 0)
             token.edit().putString("token_access",response).apply()
             token.edit().putString("login",username.value.text).apply()

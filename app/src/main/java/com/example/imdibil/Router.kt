@@ -7,7 +7,9 @@ import android.content.pm.ActivityInfo
 import android.graphics.drawable.GradientDrawable.Orientation
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -121,6 +123,7 @@ fun NavGraph(
         ctx.startActivity(Intent(ctx, LoginActivity::class.java))
     }
     val t = getToken(ctx)
+    Log.d("TokenLog", t)
     NavHost(navController = navHostController, startDestination = "home"){
         composable("profile"){
             Profile(navHostController, mainViewModel)
@@ -161,6 +164,7 @@ fun NavGraph(
 
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
 {
@@ -198,7 +202,14 @@ fun Profile(navController: NavHostController, mainViewModel: MainViewModel)
             )
             Column (verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
                 Row(Modifier.fillMaxWidth(), Arrangement.Center) {
-                    GoldText(user.value.name, 28.sp, 600)
+                    Text(text = user.value.name, color = Gold, fontSize = 28.sp, fontWeight = FontWeight(600), modifier = Modifier.combinedClickable(
+                        onLongClick = {
+                           openDialog.value = true
+                        },
+                        onClick = {
+                            Toast.makeText(context, "Для выхода из аккаунта удерживайте кнопку", Toast.LENGTH_SHORT).show()
+                        }
+                    ))
                 }
                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
